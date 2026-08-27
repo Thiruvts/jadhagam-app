@@ -18,7 +18,7 @@ import hashlib
 import uuid
 import os
 from pathlib import Path
-#import swisseph as swe
+import swisseph as swe
 import requests
 try:
     import anthropic as _anthropic_sdk
