@@ -1,0 +1,135 @@
+{
+  "users": {
+    "amma": {
+      "password_hash": "3aa9ca835cf6a4446d6312178fb9d24409284eaa1c47adc56ecb11c95a78cddc",
+      "display_name": "Amma",
+      "created": "2026-05-22",
+      "members": []
+    },
+    "vtsm": {
+      "password_hash": "3aa9ca835cf6a4446d6312178fb9d24409284eaa1c47adc56ecb11c95a78cddc",
+      "display_name": "VTSM",
+      "created": "2026-05-22",
+      "members": [
+        {
+          "name": "Thiru",
+          "relation": "சொந்தம் / Self",
+          "birth_date": "1992-09-02",
+          "birth_time": "10:45",
+          "place": "coimbatore",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "300c6cf7-c0cc-4ef9-830b-a623ee222ccd",
+          "added": "2026-05-22"
+        }
+      ]
+    },
+    "thiru": {
+      "password_hash": "3aa9ca835cf6a4446d6312178fb9d24409284eaa1c47adc56ecb11c95a78cddc",
+      "display_name": "Thiru",
+      "created": "2026-05-22",
+      "members": [
+        {
+          "name": "Thirugnanam",
+          "relation": "சொந்தம் / Self",
+          "birth_date": "1992-09-02",
+          "birth_time": "10:45",
+          "place": "COIMBATORE",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "c3329718-6cac-4b6b-a625-7f5e2b9f8e66",
+          "added": "2026-05-22"
+        },
+        {
+          "name": "malathi",
+          "relation": "மனைவி / Wife",
+          "birth_date": "1994-10-03",
+          "birth_time": "06:39",
+          "place": "coimbatore",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "f055b134-dfc6-468d-83c5-44a197ceaae0",
+          "added": "2026-05-26"
+        },
+        {
+          "name": "sivamani",
+          "relation": "நண்பன் / Friend",
+          "birth_date": "1991-08-29",
+          "birth_time": "06:15",
+          "place": "coimbatore",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "c47a0fb6-ffc7-472c-bde0-de39fb0a7b4a",
+          "added": "2026-05-27"
+        },
+        {
+          "name": "vijay anna",
+          "relation": "நண்பன் / Friend",
+          "birth_date": "1987-04-30",
+          "birth_time": "06:00",
+          "place": "attur,salem",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "10654e3a-e1b1-4abe-a918-bc053893682e",
+          "added": "2026-08-04"
+        },
+        {
+          "name": "premsundar",
+          "relation": "சகோதரன் / Brother",
+          "birth_date": "1997-03-04",
+          "birth_time": "00:50",
+          "place": "coimbatore",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "620b21fb-0278-48e1-aaf0-29da904f6e09",
+          "added": "2026-08-20"
+        },
+        {
+          "name": "Tamilarasan",
+          "relation": "சகோதரன் / Brother",
+          "birth_date": "1994-07-21",
+          "birth_time": "23:22",
+          "place": "coimbatore",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "f49bbcc2-b9da-4772-a0bf-62a0a400685f",
+          "added": "2026-08-26"
+        }
+      ]
+    },
+    "vijayan": {
+      "password_hash": "858c833e0d12a28e41b29b2a4e696ab8156ffb761923d2c260617d7b7ceabc1b",
+      "display_name": "vijayan",
+      "created": "2026-08-04",
+      "members": [
+        {
+          "name": "vijayan",
+          "relation": "சொந்தம் / Self",
+          "birth_date": "1957-01-01",
+          "birth_time": "06:00",
+          "place": "",
+          "tz": 5.5,
+          "lat": 13.08,
+          "lon": 80.27,
+          "notes": "",
+          "id": "f336661e-681b-416e-a3b5-5c195475d2dc",
+          "added": "2026-08-04"
+        }
+      ]
+    }
+  }
+}
