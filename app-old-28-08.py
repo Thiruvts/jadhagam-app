@@ -6654,241 +6654,40 @@ def main():
         # ── Life Events Prediction ────────────────────────────────
         st.markdown("---")
         st.markdown("### 🎯 முக்கிய வாழ்க்கை நிகழ்வுகள் — Life Event Indicators")
-        st.caption("பல காரணிகள் (அதிபதி நிலை + Ashtakvarga + தசா காலம்) சேர்த்து கணக்கிடப்படுகிறது")
-
-        def _life_event_score(house_nums):
-            """Multi-factor check for a life-event house (or pair of houses):
-            lord's placement favorability + dignity + Ashtakvarga strength.
-            Returns (score 0-6, list of factor strings, list of relevant lords)."""
-            factors, lords, score = [], [], 0
-            for hn in house_nums:
-                r_h   = (lagna_rasi + hn - 1) % 12
-                lord_h= RASI_LORD[r_h]
-                lords.append(lord_h)
-                lord_r = get_rasi(planets.get(lord_h, 0))
-                lord_house = (lord_r - lagna_rasi) % 12 + 1
-                lord_stat  = planet_status(lord_h, lord_r) if lord_h not in ("ராகு","கேது") else "—"
-                av = sarva_ashtak[r_h]
-
-                if lord_house in [1,4,5,7,9,10,11]:
-                    score += 1
-                    factors.append(f"{hn}ம் வீட்டு அதிபதி {lord_h} {lord_house}ம் வீட்டில் — சாதகமான இடம்")
-                else:
-                    factors.append(f"{hn}ம் வீட்டு அதிபதி {lord_h} {lord_house}ம் வீட்டில் — கவனிக்க வேண்டிய இடம்")
-
-                if "உச்சம்" in lord_stat or "சொந்த வீடு" in lord_stat:
-                    score += 1
-                    factors.append(f"{lord_h} {lord_stat} — வலிமையான நிலை")
-                elif "நீச்சம்" in lord_stat:
-                    factors.append(f"{lord_h} {lord_stat} — பலவீனமான நிலை, நிவாரணம் உதவும்")
-
-                if av >= 28:
-                    score += 1
-                    factors.append(f"{hn}ம் வீடு Ashtakvarga {av}/56 — வலிமையான வீடு")
-                else:
-                    factors.append(f"{hn}ம் வீடு Ashtakvarga {av}/56 — சராசரிக்கு கீழ்")
-            return score, factors, lords
-
-        def _life_event_when(lords):
-            """Find the nearest Dasha window (past/current/future) belonging to
-            one of this event's relevant house lords — the classical timing tool."""
-            candidates = [d for d in dasha_tl if d["planet"] in lords]
-            current = next((d for d in candidates if d["start"] <= today <= d["end"]), None)
-            if current:
-                return f"🟢 நடப்பு {current['planet']} தசையில் ({current['start'].strftime('%Y')}–{current['end'].strftime('%Y')}) இந்த நிகழ்வுக்கு சாதகமான காலம் — இப்போது கவனம் செலுத்தலாம்."
-            future = sorted([d for d in candidates if d["start"] > today], key=lambda d: d["start"])
-            if future:
-                return f"⏩ அடுத்து {future[0]['planet']} தசை {future[0]['start'].strftime('%b %Y')}ல் தொடங்கும் — அந்த காலம் இந்த நிகழ்வுக்கு முக்கியமானதாக இருக்கலாம்."
-            return "⏳ இதற்கான துல்லியமான காலம் Navamsa/divisional chart மற்றும் அந்தர்தசா பகுப்பாய்வு தேவை — ஜோதிடரிடம் ஆலோசிக்கவும்."
-
         _LIFE_EVENTS = [
-            ("💑 திருமணம்",    "Marriage",       [7, 2]),
-            ("👶 குழந்தை",     "Children",       [5, 9]),
-            ("💼 தொழில் உயர்வு","Career Growth", [10, 6]),
-            ("🏠 வீடு / சொத்து","Property",       [4, 11]),
-            ("🌍 வெளிநாடு",     "Foreign Travel", [12, 9]),
-            ("📚 கல்வி",       "Higher Education",[5, 9]),
+            ("💑 திருமணம்",  "Marriage",
+             lambda p, lagna: "7ம் வீட்டு அதிபதி சாதகம்" if RASI_LORD[(lagna+6)%12] in ["குரு","சுக்கிரன்"] else
+                              "7ம் வீட்டு அதிபதி சாதாரண நிலை — ஜோதிடர் ஆலோசனை பெறவும்"),
+            ("👶 குழந்தை",  "Children",
+             lambda p, lagna: "5ம் வீட்டு அதிபதி சாதகம் — குழந்தை பாக்கியம் நல்லது" if RASI_LORD[(lagna+4)%12] in ["குரு","சந்திரன்"] else
+                              "5ம் வீட்டு அதிபதி ஆய்வு தேவை"),
+            ("💼 தொழில் உயர்வு","Career Growth",
+             lambda p, lagna: "10ம் வீடு வலிமையானது — தொழில் யோகம் உண்டு" if sarva_ashtak[(lagna+9)%12] >= 28 else
+                              "10ம் வீடு சாதாரண — கடுமையான உழைப்பு தேவை"),
+            ("🏠 வீடு / சொத்து","Property",
+             lambda p, lagna: "4ம் வீட்டு அதிபதி சாதகம் — சொத்து சேர்க்கை யோகம்" if RASI_LORD[(lagna+3)%12] in ["சுக்கிரன்","குரு","சந்திரன்"] else
+                              "4ம் வீடு ஆய்வு தேவை"),
+            ("🌍 வெளிநாடு",   "Foreign Travel",
+             lambda p, lagna: "12ம் வீடு + ராகு சாதகம் — வெளிநாடு வாய்ப்பு" if RASI_LORD[(lagna+11)%12] in ["ராகு","சனி"] else
+                              "12ம் வீடு ஆய்வு தேவை"),
+            ("📚 கல்வி",       "Higher Education",
+             lambda p, lagna: "5ம் + 9ம் வீடு வலிமையானது — உயர்கல்வி சாத்தியம்" if sarva_ashtak[(lagna+4)%12] >= 26 else
+                              "கல்வி விஷயத்தில் கடினமான உழைப்பு தேவை"),
         ]
         ev_cols = st.columns(2)
-        for i_ev, (ev_ta, ev_en, ev_houses) in enumerate(_LIFE_EVENTS):
-            score, factors, lords = _life_event_score(ev_houses)
-            max_score = len(ev_houses) * 3
-            verdict = "வலிமையான யோகம்" if score >= max_score * 0.66 else \
-                      "மிதமான வாய்ப்பு — முயற்சி தேவை" if score >= max_score * 0.33 else \
-                      "சவாலான நிலை — கூடுதல் கவனம்/நிவாரணம் தேவை"
-            ev_color = "#44ff88" if score >= max_score*0.66 else "#FFB347" if score >= max_score*0.33 else "#FF6666"
-            when_txt = _life_event_when(lords)
-
-            factors_html = "".join(f"<div style='font-size:0.78rem;color:#999;margin-top:2px'>• {f}</div>" for f in factors)
+        for i_ev, (ev_ta, ev_en, ev_fn) in enumerate(_LIFE_EVENTS):
+            ev_result = ev_fn(planets, lagna_rasi)
+            ev_ok = "சாதகம்" in ev_result or "யோகம்" in ev_result or "நல்லது" in ev_result
+            ev_color = "#44ff88" if ev_ok else "#FFB347"
             ev_cols[i_ev % 2].markdown(
                 f"<div style='background:#1a0a2e;border-left:4px solid {ev_color};"
                 f"border-radius:10px;padding:10px;margin-bottom:8px'>"
                 f"<div style='color:{ev_color};font-weight:700;font-size:0.9rem'>"
-                f"{ev_ta} ({ev_en}) — {score}/{max_score}</div>"
-                f"<div style='color:#ddd;font-size:0.85rem;margin-top:4px;font-weight:600'>{verdict}</div>"
-                f"{factors_html}"
-                f"<div style='color:#4FC3F7;font-size:0.8rem;margin-top:6px;padding-top:6px;border-top:1px solid #333'>🕐 {when_txt}</div>"
+                f"{ev_ta} ({ev_en})</div>"
+                f"<div style='color:#ddd;font-size:0.85rem;margin-top:4px'>{ev_result}</div>"
                 f"</div>",
                 unsafe_allow_html=True
             )
-
-        # ── Personal Deep-Dive: Study, Career Fit, Health, Marriage & Children ──
-        st.markdown("---")
-        st.markdown("### 🧭 ஆழ்ந்த பகுப்பாய்வு — Personal Deep-Dive")
-
-        _age_years = (today.date() - bdate).days / 365.25 if hasattr(today, "date") else (today - bdate).days / 365.25
-        _is_minor  = _age_years < 16
-
-        def _house_block(house_nums):
-            """Same multi-factor evaluator used for Life Events, exposed here too."""
-            total, max_t, notes = 0, 0, []
-            for hn in house_nums:
-                r_h    = (lagna_rasi + hn - 1) % 12
-                lord_h = RASI_LORD[r_h]
-                lord_r = get_rasi(planets.get(lord_h, 0))
-                lord_house = (lord_r - lagna_rasi) % 12 + 1
-                lord_stat  = planet_status(lord_h, lord_r) if lord_h not in ("ராகு","கேது") else "—"
-                av = sarva_ashtak[r_h]
-                s = 0
-                if lord_house in [1,4,5,7,9,10,11]: s += 1
-                if "உச்சம்" in lord_stat or "சொந்த வீடு" in lord_stat: s += 1
-                elif "நீச்சம்" in lord_stat: s -= 1
-                if av >= 28: s += 1
-                total += s; max_t += 2
-                notes.append((hn, lord_h, lord_house, lord_stat, av))
-            return total, max_t, notes
-
-        _CAREER_FIELDS = {
-            "சூரியன்":"அரசு பணி, நிர்வாகம், தலைமைத்துவம், அரசியல்",
-            "சந்திரன்":"பொது தொடர்பு, மருத்துவம் (nursing/psychology), ஹோட்டல்/உணவு, பயணம்",
-            "செவ்வாய்":"பொறியியல், இராணுவம்/காவல், விளையாட்டு, ரியல் எஸ்டேட்",
-            "புதன்":"கணக்கியல், வணிகம், IT/மென்பொருள், எழுத்து/ஊடகம்",
-            "குரு":"கல்வி/ஆசிரியர், சட்டம், நிதி ஆலோசனை, ஆன்மீகம்",
-            "சுக்கிரன்":"கலை, வடிவமைப்பு, திரைப்படம்/இசை, அழகுசாதனம், ஆடம்பர பொருட்கள்",
-            "சனி":"பொறியியல் (கனரக), சுரங்கம்/எண்ணெய், தொழிற்சாலை, சமூக சேவை",
-            "ராகு":"தொழில்நுட்பம், வெளிநாட்டு தொடர்பு வணிகம், புதுமையான/அசாதாரண தொழில்",
-            "கேது":"ஆராய்ச்சி, மருத்துவம் (ஆழ்ந்த), ஆன்மீக/மறைவான துறைகள்",
-        }
-        _STUDY_FIELDS = {
-            "சூரியன்":"அரசியல் அறிவியல், நிர்வாகம், மருத்துவம்",
-            "சந்திரன்":"உளவியல், கலை, பொது நல்வாழ்வு",
-            "செவ்வாய்":"பொறியியல், விளையாட்டு அறிவியல்",
-            "புதன்":"கணிதம், கணினி அறிவியல், வணிகவியல், தொடர்பியல்",
-            "குரு":"சட்டம், ஆசிரியப் பயிற்சி, நிதியியல், தத்துவம்",
-            "சுக்கிரன்":"கலை/வடிவமைப்பு, இசை, நாகரீகம்",
-            "சனி":"பொறியியல் (சிவில்/mechanical), புள்ளியியல்",
-            "ராகு":"புதிய தொழில்நுட்பம் (AI/Data), வெளிநாட்டு படிப்பு",
-            "கேது":"ஆராய்ச்சி, மருத்துவம், தத்துவம்",
-        }
-        _BODY_PART = {
-            1:"தலை/மூளை",2:"முகம்/வலது கண்/தொண்டை",3:"கை/தோள்/நுரையீரல்",4:"மார்பு/இதயம்",
-            5:"வயிறு/கல்லீரல்",6:"குடல்/சிறுநீரகம்",7:"இடுப்பு/சிறுநீர் பாதை",8:"பிறப்புறுப்பு/நாள்பட்ட நோய்",
-            9:"தொடை",10:"முழங்கால்/மூட்டு",11:"கீழ்கால்",12:"கால் பாதம்/தூக்கம்",
-        }
-
-        col_a, col_b = st.columns(2)
-
-        # 1) STUDY / EDUCATION — houses 4, 5, 9
-        with col_a:
-            sc, mx, notes = _house_block([4, 5, 9])
-            verdict = "வலிமையான கல்வி யோகம்" if sc >= mx*0.6 else "மிதமான கல்வி யோகம் — தொடர்ந்த முயற்சி தேவை" if sc >= mx*0.3 else "கல்வியில் சவால்கள் — கூடுதல் வழிகாட்டுதல் தேவை"
-            best_planet = max(
-                ["புதன்","குரு","சுக்கிரன்"],
-                key=lambda p: (1 if "உச்சம்" in (planet_status(p, get_rasi(planets.get(p,0))) or "") else
-                               0.5 if "சொந்த வீடு" in (planet_status(p, get_rasi(planets.get(p,0))) or "") else 0)
-            )
-            st.markdown(
-                f"<div style='background:#0f1a2e;border-left:4px solid #4FC3F7;border-radius:10px;padding:12px'>"
-                f"<b style='color:#4FC3F7'>🎓 எப்படி படிப்பான் — Study & Learning</b><br>"
-                f"<div style='color:#ddd;font-size:0.85rem;margin-top:6px'><b>{verdict}</b> ({sc}/{mx})</div>"
-                + "".join(f"<div style='color:#999;font-size:0.78rem;margin-top:3px'>• {hn}ம் வீடு → {lh} {lhh}ம் வீட்டில் ({lst}), AV {av}/56</div>"
-                          for hn, lh, lhh, lst, av in notes)
-                + f"<div style='color:#FFB347;font-size:0.82rem;margin-top:8px'>💡 பரிந்துரைக்கப்படும் துறைகள்: {_STUDY_FIELDS.get(best_planet,'—')}</div>"
-                f"</div>", unsafe_allow_html=True
-            )
-
-        # 2) CAREER FIT — houses 1, 10, 6, 11 combined strongest lord
-        with col_b:
-            career_planets = [RASI_LORD[(lagna_rasi + h - 1) % 12] for h in [10, 1, 11]]
-            best_career_p = max(
-                set(career_planets),
-                key=lambda p: (2 if "உச்சம்" in (planet_status(p, get_rasi(planets.get(p,0))) or "") else
-                               1 if "சொந்த வீடு" in (planet_status(p, get_rasi(planets.get(p,0))) or "") else
-                               0 if "நீச்சம்" not in (planet_status(p, get_rasi(planets.get(p,0))) or "") else -1)
-            )
-            l10 = RASI_LORD[(lagna_rasi + 9) % 12]
-            l10_house = (get_rasi(planets.get(l10,0)) - lagna_rasi) % 12 + 1
-            l10_stat  = planet_status(l10, get_rasi(planets.get(l10,0))) if l10 not in ("ராகு","கேது") else "—"
-            st.markdown(
-                f"<div style='background:#1a0f2e;border-left:4px solid #B388FF;border-radius:10px;padding:12px'>"
-                f"<b style='color:#B388FF'>💼 எதில் சிறப்பாக இருப்பான் — Best-Fit Career</b><br>"
-                f"<div style='color:#999;font-size:0.78rem;margin-top:6px'>10ம் வீட்டு அதிபதி {l10} — {l10_house}ம் வீட்டில் ({l10_stat})</div>"
-                f"<div style='color:#FFB347;font-size:0.82rem;margin-top:8px'>💡 பரிந்துரைக்கப்படும் தொழில் துறைகள்: {_CAREER_FIELDS.get(best_career_p,'—')}</div>"
-                f"</div>", unsafe_allow_html=True
-            )
-
-        st.markdown("<br>", unsafe_allow_html=True)
-        col_c, col_d = st.columns(2)
-
-        # 3) HEALTH DEEP-DIVE — houses 1, 6, 8
-        with col_c:
-            weak_health_houses = []
-            for hn in [1, 6, 8]:
-                r_h = (lagna_rasi + hn - 1) % 12
-                lord_h = RASI_LORD[r_h]
-                lord_stat = planet_status(lord_h, get_rasi(planets.get(lord_h,0))) if lord_h not in ("ராகு","கேது") else "—"
-                av = sarva_ashtak[r_h]
-                if "நீச்சம்" in lord_stat or av < 25:
-                    weak_health_houses.append(hn)
-            if weak_health_houses:
-                parts = ", ".join(_BODY_PART[h] for h in weak_health_houses)
-                health_verdict = f"⚠️ கவனிக்க வேண்டிய பகுதிகள்: {parts} — வழக்கமான பரிசோதனை நல்லது."
-                h_color = "#FF8888"
-            else:
-                health_verdict = "✅ மொத்தத்தில் ஆரோக்கிய அமைப்பு நல்ல நிலையில் உள்ளது."
-                h_color = "#66cc88"
-            st.markdown(
-                f"<div style='background:#1e0a0a;border-left:4px solid {h_color};border-radius:10px;padding:12px'>"
-                f"<b style='color:{h_color}'>❤️ ஆரோக்கியம் — Health Deep-Dive</b><br>"
-                f"<div style='color:#ddd;font-size:0.85rem;margin-top:6px'>{health_verdict}</div>"
-                f"<div style='color:#888;font-size:0.75rem;margin-top:6px'>(1,6,8ம் வீடுகளின் அதிபதி நிலை + Ashtakvarga அடிப்படையில்)</div>"
-                f"</div>", unsafe_allow_html=True
-            )
-
-        # 4) MARRIAGE & CHILDREN — age-gated
-        with col_d:
-            if _is_minor:
-                st.markdown(
-                    f"<div style='background:#1a1a1a;border-left:4px solid #888;border-radius:10px;padding:12px'>"
-                    f"<b style='color:#aaa'>💍 திருமணம் / குழந்தைகள்</b><br>"
-                    f"<div style='color:#999;font-size:0.85rem;margin-top:6px'>தற்போதைய வயது ~{int(_age_years)} — இந்த விஷயங்கள் இன்னும் பொருந்தாது. "
-                    f"வளர்ச்சி, கல்வி, ஆரோக்கியம் மீது கவனம் செலுத்துவது நல்லது. வயது 18-20 ஆனதும் மீண்டும் பார்க்கலாம்.</div>"
-                    f"</div>", unsafe_allow_html=True
-                )
-            else:
-                mangal = calc_mangal_dosha(planets, lagna_rasi)
-                sc7, mx7, notes7 = _house_block([7])
-                _, l7h, l7house, l7stat, l7av = notes7[0]
-                marriage_ok = sc7 >= mx7*0.5 and not mangal["has_dosha"]
-                m_when = _life_event_when([l7h])
-                sc5, mx5, notes5 = _house_block([5])
-                jup_stat = planet_status("குரு", get_rasi(planets.get("குரு",0)))
-                child_score = sc5 + (1 if "உச்சம்" in jup_stat or "சொந்த வீடு" in jup_stat else -1 if "நீச்சம்" in jup_stat else 0)
-                child_range = "2-3 குழந்தைகள் பாக்கியம் சாதகமாக உள்ளது" if child_score >= 2 else \
-                              "1-2 குழந்தைகள் — சராசரி நிலை" if child_score >= 0 else \
-                              "குழந்தை பாக்கியத்தில் தாமதம்/சவால் இருக்கலாம் — மருத்துவ ஆலோசனை + நிவாரணம் உதவும்"
-                mangal_txt = "உண்டு" if mangal["has_dosha"] else ("பாதி (சொந்த/உச்ச ராசியில் — பகுதி நிவர்த்தி)" if mangal["partial"] else "இல்லை")
-                st.markdown(
-                    f"<div style='background:#1e0a1e;border-left:4px solid #FF80AB;border-radius:10px;padding:12px'>"
-                    f"<b style='color:#FF80AB'>💍 திருமணம் — Marriage</b><br>"
-                    f"<div style='color:#ddd;font-size:0.85rem;margin-top:4px'>{'✅ சாதகமான யோகம்' if marriage_ok else '⚠️ கவனம் தேவை'} "
-                    f"({sc7}/{mx7}), செவ்வாய் தோஷம்: {mangal_txt}</div>"
-                    f"<div style='color:#4FC3F7;font-size:0.78rem;margin-top:4px'>🕐 {m_when}</div>"
-                    f"<div style='color:#FF80AB;font-weight:600;margin-top:10px'>👶 குழந்தைகள் — Children</div>"
-                    f"<div style='color:#ddd;font-size:0.85rem;margin-top:4px'>{child_range}</div>"
-                    f"<div style='color:#777;font-size:0.72rem;margin-top:6px'>(பாரம்பரிய ஜோதிட குறியீடு — உறுதியான எண்ணிக்கை அல்ல, மருத்துவ/தனிப்பட்ட முடிவுகளுக்கு மாற்றாக கருத வேண்டாம்)</div>"
-                    f"</div>", unsafe_allow_html=True
-                )
 
     # ════════════════════════════════════════════════════════════════
     # TAB 7 — YOGAS
@@ -6977,19 +6776,6 @@ def main():
             icon = db_entry["icon"] if db_entry else ("⚠️" if is_challenging else "⭐")
             outcomes = db_entry["outcomes"] if db_entry else []
 
-            # ── WHEN — is this yoga's causative planet in Dasha right now? ──
-            # Yoga descriptions already name the planets involved (they're built
-            # from this chart's own placements), so we can check whether the
-            # planet currently running Dasha is one of them — a yoga is
-            # classically felt strongest when its own planet's Dasha is active.
-            _ap_name = active_dasha["planet"]
-            _yoga_text = yoga["name"] + " " + yoga.get("desc", "")
-            _yoga_live_now = _ap_name in _yoga_text
-            if _yoga_live_now:
-                _when_yoga = f"🟢 <b>இப்போது தீவிரம்:</b> நடப்பு {_ap_name} தசையால் இயக்கப்படும் யோகம் — பலன் தற்போது வலுவாக அனுபவிக்கப்படும்."
-            else:
-                _when_yoga = "⏳ <b>எப்போது:</b> இந்த யோகத்தில் ஈடுபட்ட கிரகங்களின் தசா/அந்தர்தசா காலத்தில் பலன் அதிகமாக வெளிப்படும் — கீழே 'விரிவான பலன்கள்'ல் அந்த கிரகம் குறிப்பிடப்பட்டுள்ளது."
-
             # ── Yoga header card ──
             st.markdown(
                 f"<div style='background:{bg_color};border-left:5px solid {border_color};"
@@ -7002,7 +6788,6 @@ def main():
                 f"</div>"
                 f"<div style='color:#ccc;margin-top:8px;font-size:0.9rem;line-height:1.6'>{yoga['desc']}</div>"
                 f"<div style='color:#888;font-size:0.8rem;margin-top:3px;font-style:italic'>{yoga['en_desc']}</div>"
-                f"<div style='color:#aaa;font-size:0.8rem;margin-top:8px;padding-top:8px;border-top:1px solid #333'>{_when_yoga}</div>"
                 f"</div>",
                 unsafe_allow_html=True
             )
@@ -7190,18 +6975,6 @@ def main():
                 + ("✅ சாதகமான நிலை." if lord_fav else "⚠️ சவாலான நிலை — கூடுதல் கவனம் தேவை.")
             )
 
-            # WHEN — this house's results peak when its lord's own Dasha runs
-            _h_lord_dasha = next((d for d in dasha_tl if d["planet"] == house_lord), None)
-            if _h_lord_dasha:
-                if _h_lord_dasha["end"] < today:
-                    when_house = f"⏪ {house_lord} தசை ({_h_lord_dasha['start'].strftime('%Y')}–{_h_lord_dasha['end'].strftime('%Y')}) ஏற்கனவே முடிந்துவிட்டது — இந்த வீட்டின் முக்கிய பலன்கள் அப்போது வலுவாக அனுபவப்பட்டிருக்கும்."
-                elif _h_lord_dasha["start"] > today:
-                    when_house = f"⏩ {house_lord} தசை {_h_lord_dasha['start'].strftime('%Y')}ல் தொடங்கும் — அப்போது இந்த வீட்டின் பலன்கள் மிகவும் தீவிரமாக வெளிப்படும்."
-                else:
-                    when_house = f"🟢 {house_lord} தசை இப்போது நடக்கிறது ({_h_lord_dasha['start'].strftime('%Y')}–{_h_lord_dasha['end'].strftime('%Y')}) — இந்த வீட்டின் பலன்கள் தற்போது தீவிரமாக செயல்படும் காலம்."
-            else:
-                when_house = "இந்த வீட்டு அதிபதியின் மகாதசை இந்த ஜாதகத்தில் தனியாக பட்டியலிடப்படவில்லை (ராகு/கேது என்றால் நிழல் கிரக விதிகள் பொருந்தும்)."
-
             expander_title = (
                 f"**{house_num}ம் வீடு** — {RASI[rasi_idx]} ({RASI_EN[rasi_idx]}) "
                 f"| அதிபதி: {house_lord} in H{lord_house_n} "
@@ -7238,13 +7011,6 @@ def main():
                         f"<div style='background:#1e1040;border-left:3px solid #9966ff;"
                         f"border-radius:6px;padding:8px;font-size:0.82rem;color:#ccc'>"
                         f"📖 {HOUSE_MEANING[house_num-1]}</div>",
-                        unsafe_allow_html=True
-                    )
-                    # WHEN this house's effects peak
-                    st.markdown(
-                        f"<div style='background:#0a1420;border-left:3px solid #4FC3F7;"
-                        f"border-radius:6px;padding:8px;font-size:0.8rem;color:#aaa;margin-top:6px'>"
-                        f"🕐 <b>எப்போது:</b> {when_house}</div>",
                         unsafe_allow_html=True
                     )
 
@@ -7333,7 +7099,6 @@ def main():
         )
 
         st.markdown("#### 🌟 அனைத்து கிரக நிவாரணங்கள் — All Remedies")
-        st.caption("ஒவ்வொரு கிரகத்திற்கும் — ஏன் தேவை, எப்போது தொடங்குவது என்பதுடன்")
         rem_cols = st.columns(3)
         for i, p in enumerate(PLANETS_LIST):
             rem_html  = fmt_remedy(PRED.get(p, {}).get("remedy", "—"))
@@ -7341,39 +7106,12 @@ def main():
             stat      = planet_status(p, get_rasi(lon_p)) if p not in ["ராகு","கேது"] else ""
             stat_html = f"<div style='font-size:0.75rem;color:#888;margin-top:2px'>{stat}</div>" if stat else ""
             pcolor    = P_COLOR.get(p, "#888888")
-
-            # WHY this remedy matters for THIS chart — combine dignity + shadbala + dasha status
-            _sb = shadbala_data.get(p, {})
-            _is_weak_sb = _sb and _sb.get("score", 10) <= 4
-            _is_debil   = "நீச்சம்" in stat
-            _is_dasha_now = (p == ap)
-            why_bits = []
-            if _is_debil:
-                why_bits.append(f"நீச்ச நிலையில் உள்ளதால் இயல்பான பலம் குறைவு")
-            if _is_weak_sb:
-                why_bits.append(f"ஷட்பலம் பலவீனம் ({_sb.get('score','?')}/10)")
-            if _is_dasha_now:
-                why_bits.append("நடப்பு தசா கிரகம் — இப்போது பலன் அதிகம் தேவை")
-            why_html = ("<div style='font-size:0.78rem;color:#FF8888;margin-top:4px'>⚠️ " + " · ".join(why_bits) + "</div>") if why_bits else \
-                       "<div style='font-size:0.78rem;color:#66cc88;margin-top:4px'>✅ இந்த கிரகம் நல்ல நிலையில் உள்ளது — இது ஒரு பொது/முன்னெச்சரிக்கை நிவாரணம்</div>"
-
-            # WHEN to start — this planet's own Dasha window, if it has one on the timeline
-            _p_dasha = next((d for d in dasha_tl if d["planet"] == p), None)
-            if _p_dasha and _p_dasha["start"] <= today <= _p_dasha["end"]:
-                when_html = f"<div style='font-size:0.75rem;color:#4FC3F7;margin-top:2px'>🕐 இப்போதே தொடங்குங்கள் — நடப்பு தசையில் உள்ளது</div>"
-            elif _p_dasha and _p_dasha["start"] > today:
-                when_html = f"<div style='font-size:0.75rem;color:#4FC3F7;margin-top:2px'>🕐 {_p_dasha['start'].strftime('%Y')}க்கு முன் தொடங்கினால் நல்லது (அந்த தசைக்கு தயார்)</div>"
-            else:
-                when_html = f"<div style='font-size:0.75rem;color:#4FC3F7;margin-top:2px'>🕐 எப்போது வேண்டுமானாலும் தொடங்கலாம் — பொதுவான நிவாரணம்</div>"
-
             rem_cols[i % 3].markdown(
                 f"<div style='background:#1e0a3c;border-left:4px solid {pcolor};"
                 f"border-radius:10px;padding:12px;margin-bottom:10px'>"
                 f"<div style='font-size:0.95rem;font-weight:700;color:{pcolor}'>"
                 f"{P_SYM.get(p,'')} {p} ({P_EN[p]})</div>"
                 f"{stat_html}"
-                f"{why_html}"
-                f"{when_html}"
                 f"<div style='color:#ccc;font-size:0.88rem;margin-top:8px;line-height:1.8'>{rem_html}</div>"
                 f"</div>",
                 unsafe_allow_html=True
